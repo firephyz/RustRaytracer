@@ -42,7 +42,7 @@ pub struct RenderMeshIterator<'b> {
 impl<'b> Iterator for RenderMeshIterator<'b> {
     type Item = RenderSquare<'b>;
     fn next(&mut self) -> Option<Self::Item> {
-        if (self.iter_index == (self.mesh.xvals.len() - 1) * (self.mesh.yvals.len() - 1)) {
+        let result = if (self.iter_index == (self.mesh.xvals.len() - 1) * (self.mesh.yvals.len() - 1)) {
             None
         }
         else {
@@ -56,7 +56,10 @@ impl<'b> Iterator for RenderMeshIterator<'b> {
                 yh: self.mesh.yvals[y_index],
                 yl: self.mesh.yvals[y_index + 1],
             })
-        }
+        };
+
+        self.iter_index += 1;
+        result
     }
 }
 
@@ -87,14 +90,16 @@ impl<'b> RenderMesh<'b> {
     }
 
     pub fn refine(&mut self) {
-        let min_x_diff = Self::refine_vector(&mut self.xvals);
-        let min_y_diff = Self::refine_vector(&mut self.yvals);
+        let (xvals, min_x_diff) = Self::refine_vector(&mut self.xvals);
+        let (yvals, min_y_diff) = Self::refine_vector(&mut self.yvals);
 
+        self.xvals = xvals;
+        self.yvals = yvals;
         self.xres = min_x_diff;
         self.yres = min_y_diff;
     }
 
-    fn refine_vector(vals: &mut Vec<u32>) -> u32 {
+    fn refine_vector(vals: &mut Vec<u32>) -> (Vec<u32>, u32) {
         let mut new_vals = Vec::<u32>::with_capacity(2 * vals.len() - 1);
 
         // always guaranteed to have at least two elements by constructor
@@ -117,7 +122,7 @@ impl<'b> RenderMesh<'b> {
         // don't forget last existing mesh value
         new_vals.push(vals[vals.len() - 1]);
 
-        min_diff
+        (new_vals, min_diff)
     }
 
     pub fn iter(&self) -> RenderMeshIterator {

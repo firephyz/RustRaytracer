@@ -24,9 +24,10 @@ impl LightRay {
         &self.ray.direction
     }
 
-    const NUM_RAYS: u32 = 1; // number of reflections
     pub fn trace(&mut self, objects: &Vec<Box<Intersect>>) -> Color {
-        for ray_index in 1..Self::NUM_RAYS {
+        const NUM_RAYS: u32 = 1; // number of reflections
+
+        for ray_index in 0..NUM_RAYS {
             let intersection = self.find_closest_intersection(&objects);
 
             match intersection {
