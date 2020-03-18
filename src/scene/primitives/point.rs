@@ -10,8 +10,12 @@ pub struct Point {
 }
 
 impl Point {
+    pub fn abs(&self) -> f64 {
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+    }
+
     pub fn normalize(&self) -> Self {
-        let abs = (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt();
+        let abs = self.abs();
         Point::from((self.x / abs, self.y / abs, self.z / abs))
     }
 
@@ -41,6 +45,18 @@ impl Point {
             y: self.y + point.y,
             z: self.z + point.z,
         }
+    }
+
+    pub fn mult(&self, value: f64) -> Point {
+        Point {
+            x: self.x * value,
+            y: self.y * value,
+            z: self.z * value,
+        }
+    }
+
+    pub fn dot(&self, other: &Point) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 

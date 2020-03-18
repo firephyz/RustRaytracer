@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 
 use crate::scene::object::Intersect;
-use crate::scene::SceneObject;
 use super::primitives::{Ray, Point, Color};
 
 pub struct LightRay {
@@ -17,8 +16,16 @@ impl LightRay {
         }
     }
 
+    pub fn pos(&self) -> &Point {
+        &self.ray.position
+    }
+
+    pub fn dir(&self) -> &Point {
+        &self.ray.direction
+    }
+
     const NUM_RAYS: u32 = 1; // number of reflections
-    pub fn trace(&mut self, objects: &Vec<SceneObject>) -> Color {
+    pub fn trace(&mut self, objects: &Vec<Box<Intersect>>) -> Color {
         for ray_index in 1..Self::NUM_RAYS {
             let intersection = self.find_closest_intersection(&objects);
 
@@ -39,7 +46,7 @@ impl LightRay {
     }
 
     // Returns normal to intersection and color picked up
-    fn find_closest_intersection(&self, objects: &Vec<SceneObject>) -> Option<(Ray, Color)> {
+    fn find_closest_intersection(&self, objects: &Vec<Box<Intersect>>) -> Option<(Ray, Color)> {
         // remove Nones
         // TODO examine
         let intersected = objects.iter().filter_map(|obj| {

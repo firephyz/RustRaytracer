@@ -13,22 +13,22 @@ use sdl2::pixels::Color as SdlColor;
 use sdl2::rect::Rect;
 
 use camera::Camera;
-use object::{Intersect, SceneObject, SceneObjectType, Sphere};
+use object::{Intersect, Sphere};
 use primitives::{Point, Color};
 use render_mesh::{RenderMesh, RenderSquare};
 use light_ray::LightRay;
 
 pub struct Scene {
-    objects: Vec<SceneObject>,
+    objects: Vec<Box<Intersect>>,
     camera: Camera,
 }
 
 impl Scene {
     pub fn new(camera: Camera) -> Scene {
-        let mut objects = Vec::new();
-        objects.push(Sphere::new(
+        let mut objects = Vec::<Box<Intersect>>::new();
+        objects.push(Box::new(Sphere::new(
             Point::from((5.0, 0.0, 0.0)),
-            2.5));
+            2.5)));
 
         Scene {
             objects: objects,
