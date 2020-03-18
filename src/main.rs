@@ -1,18 +1,22 @@
 extern crate sdl2;
 
+#[allow(unused_imports)]
 use std::fmt;
+#[allow(unused_imports)]
 use std::convert::From;
 
 use sdl2::{Sdl, VideoSubsystem, EventPump, IntegerOrSdlError};
 use sdl2::event::{Event, EventType, WindowEvent};
-use sdl2::pixels::{PixelFormatEnum, Color};
+use sdl2::pixels::{PixelFormatEnum};
 use sdl2::render::{Canvas};
 use sdl2::video::{Window, WindowBuildError};
-use sdl2::rect::{Rect};
 
 #[macro_use]
 mod err_enum;
 mod framerate;
+mod scene;
+
+use scene::camera::Camera;
 
 // Create an enum wrapper over possible init err types
 ErrorEnum!(
@@ -49,11 +53,19 @@ fn main() {
         texture_size.0,
         texture_size.1).unwrap();
 
+    let scene = scene::Scene::new(
+        Camera::new(
+            (0.0, 0.0, 0.0),
+            (0.0, 0.0, 0.0),
+            texture_size.0,
+            texture_size.1,
+            70.0));
+
     let mut is_running = true;
     let mut framerate_regulator = framerate::FramerateRegulator::new(60);
     while is_running {
         context.canvas.with_texture_canvas(&mut texture_a, |t_canvas| {
-            render_scene(t_canvas, camera, scene);
+            scene.render(t_canvas);
         }).unwrap();
 
         context.canvas.copy(&texture_a, None, None).unwrap();
@@ -70,7 +82,7 @@ fn init_app() -> Result<AppContext, AppInitErr> {
     let video_subsystem = sdl_context.video()?;
     let event_pump = sdl_context.event_pump()?;
 
-    let window = video_subsystem.window("raytracer", 800, 600)
+    let window = video_subsystem.window("raytracer", 200, 150)
     .position_centered()
     .build()?;
 
@@ -89,13 +101,6 @@ fn init_app() -> Result<AppContext, AppInitErr> {
         canvas: canvas,
         events: event_pump,
     })
-}
-
-fn render_scene(canvas: &mut Canvas<Window>) {
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.clear();
-    canvas.set_draw_color(Color::RGB(0, 255, 0));
-    canvas.fill_rect(Rect::new(50, 50, 50, 50)).unwrap();
 }
 
 fn poll_events(events: &mut EventPump, is_running: &mut bool) {
