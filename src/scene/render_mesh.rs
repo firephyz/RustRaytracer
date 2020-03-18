@@ -3,6 +3,7 @@
 use std::vec::Vec;
 use std::iter::Iterator;
 use std::ops::Rem;
+use std::fmt::Debug;
 
 use crate::scene::LightRay;
 use crate::scene::primitives::{Point, Ray, Color};
@@ -31,6 +32,18 @@ impl<'b> RenderSquare<'b> {
         let direction = self.mesh.camera.transform(mid_x, mid_y).normalize();
 
         Ray::new(self.mesh.camera.position.clone(), direction)
+    }
+}
+
+impl<'b> Debug for RenderSquare<'b> {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "RenderSquare {{\n");
+        write!(fmt, "\txl: {}", self.xl);
+        write!(fmt, "\txr: {}\n", self.xr);
+        write!(fmt, "\tyh: {}", self.yh);
+        write!(fmt, "\tyl: {}\n", self.yl);
+        write!(fmt, "}}");
+        Ok(())
     }
 }
 

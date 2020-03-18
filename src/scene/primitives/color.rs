@@ -1,6 +1,6 @@
 use std::convert::From;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Color {
     pub r: u8,
     pub g: u8,

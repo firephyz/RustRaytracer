@@ -62,7 +62,7 @@ fn main() {
             70.0));
 
     let mut is_running = true;
-    let mut framerate_regulator = framerate::FramerateRegulator::new(1);
+    let mut framerate_regulator = framerate::FramerateRegulator::new(10);
     while is_running {
         context.canvas.with_texture_canvas(&mut texture_a, |t_canvas| {
             scene.render(t_canvas);
@@ -82,7 +82,7 @@ fn init_app() -> Result<AppContext, AppInitErr> {
     let video_subsystem = sdl_context.video()?;
     let event_pump = sdl_context.event_pump()?;
 
-    let window = video_subsystem.window("raytracer", 800, 600)
+    let window = video_subsystem.window("raytracer", 400, 300)
     .position_centered()
     .build()?;
 

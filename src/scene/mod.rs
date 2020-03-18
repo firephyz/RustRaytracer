@@ -49,16 +49,15 @@ impl Scene {
             }).collect();
 
             for (square, color) in square_colors {
+//                println!("{:?}\n{:?}\n", &square, &color);
                 canvas.set_draw_color(SdlColor::RGB(color.r, color.g, color.b));
-                canvas.draw_rect(Rect::new(
+                canvas.fill_rect(Rect::new(
                     square.xl as i32,
                     square.yh as i32,
                     square.width(),
                     square.height()
                 )).unwrap();
             }
-
-            canvas.present();
 
             render_mesh.refine();
         }
