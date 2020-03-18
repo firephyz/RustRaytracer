@@ -23,9 +23,9 @@ impl Color {
         let mut new_b = (self.b + color.b) as f64;
 
         let abs = (new_r.powi(2) + new_g.powi(2) + new_b.powi(2)).sqrt();
-        new_r = new_r / abs * MAX_ABS;
-        new_g = new_g / abs * MAX_ABS;
-        new_b = new_b / abs * MAX_ABS;
+        new_r = new_r * abs / MAX_ABS;
+        new_g = new_g * abs / MAX_ABS;
+        new_b = new_b * abs / MAX_ABS;
 
         self.r = new_r.floor() as u8;
         self.g = new_g.floor() as u8;

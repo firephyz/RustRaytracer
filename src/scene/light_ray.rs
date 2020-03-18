@@ -1,10 +1,11 @@
 use std::cmp::Ordering;
+use std::fmt::Debug;
 
 use crate::scene::object::Intersect;
 use super::primitives::{Ray, Point, Color};
 
 pub struct LightRay {
-    ray: Ray,
+    pub ray: Ray,
     color: Color,
 }
 
@@ -29,6 +30,7 @@ impl LightRay {
 
         for ray_index in 0..NUM_RAYS {
             let intersection = self.find_closest_intersection(&objects);
+            //println!("{:?}", &intersection);
 
             match intersection {
                 None => {
@@ -89,12 +91,16 @@ impl From<Ray> for LightRay {
         LightRay::new(ray, Color::new())
     }
 }
-// impl From<(f64, f64, f64, f64, f64, f64)> for Ray {
-//     fn from(pos: (f64, f64, f64, f64, f64, f64)) -> Self {
-//         Ray {
-//             position: Point::from((pos.0, pos.1, pos.2)),
-//             direction: Point::from((pos.3, pos.4, pos.5)).normalize(),
-//             color: Color::from((0, 0, 0)),
-//         }
-//     }
-// }
+
+impl Debug for LightRay {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "({}, {}, {})\t({}, {}, {})",
+            self.ray.position.x,
+            self.ray.position.y,
+            self.ray.position.z,
+            self.ray.direction.x,
+            self.ray.direction.y,
+            self.ray.direction.z);
+        Ok(())
+    }
+}

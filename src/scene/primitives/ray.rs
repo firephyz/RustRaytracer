@@ -2,7 +2,7 @@ use std::convert::From;
 
 use super::Point;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Ray {
     pub position: Point,
     pub direction: Point,
