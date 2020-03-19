@@ -5,7 +5,6 @@ use std::time;
 pub struct FramerateRegulator {
     framerate_duration: time::Duration,
     start_time: time::Instant,
-    slack: time::Duration,
 }
 
 impl FramerateRegulator {
@@ -14,7 +13,6 @@ impl FramerateRegulator {
         FramerateRegulator {
             framerate_duration: time::Duration::new(0, delay_nanos),
             start_time: time::Instant::now(),
-            slack: time::Duration::new(0, delay_nanos),
         }
     }
 

@@ -36,7 +36,7 @@ impl LightRay {
     pub fn trace(&mut self, scene: &Scene) -> Color {
         const NUM_RAYS: u32 = 1; // number of reflections
 
-        for ray_index in 0..NUM_RAYS {
+        for _ray_index in 0..NUM_RAYS {
             let intersection = self.find_closest_intersection(&scene.objects);
 
             match intersection {
@@ -65,13 +65,14 @@ impl LightRay {
     fn compute_shadows(&self,
         normal: &Ray,
         lights: &Vec<LightSource>,
-        objects: &Vec<Box<Intersect>>) -> f64 {
+        objects: &Vec<Box<dyn Intersect>>) -> f64 {
 
         // compute intensities from each light source
         let intensities = lights.iter().map(|light| {
             // compute ray to light source
             let ray_dir = light.position.add(&normal.position.mult(-1.0));
-            let ray = LightRay::new(Ray::new(normal.position.clone(), ray_dir));
+            let ray_position = normal.position.add(&normal.direction.mult(1e-20));
+            let ray = LightRay::new(Ray::new(ray_position, ray_dir));
 
             // count number of intersections
             let intersections : Vec<_> = objects.iter().filter_map(|obj| {
@@ -87,15 +88,13 @@ impl LightRay {
             }
         }).collect::<Vec<f64>>();
 
-        println!("{:#?}", &intensities);
-
         intensities.iter().fold(0.0, |value, &intensity| {
             value + (intensity / intensities.len() as f64)
         })
     }
 
     // Returns normal to intersection and color picked up
-    fn find_closest_intersection(&self, objects: &Vec<Box<Intersect>>) -> Option<(Ray, Color)> {
+    fn find_closest_intersection(&self, objects: &Vec<Box<dyn Intersect>>) -> Option<(Ray, Color)> {
         // remove Nones
         // TODO examine
         let intersected = objects.iter().filter_map(|obj| {

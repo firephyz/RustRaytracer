@@ -9,8 +9,8 @@ pub struct Color {
 
 impl Color {
 
-    pub fn new() -> Self {
-        Color {r: 0, g: 0, b: 0}
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        Color {r: r, g: g, b: b}
     }
 
     pub fn mix(&mut self, color: &Color) {
@@ -42,11 +42,7 @@ impl Color {
 }
 
 impl From<(u8, u8, u8)> for Color {
-    fn from(pos: (u8, u8, u8)) -> Self {
-        Color {
-            r: pos.0,
-            g: pos.1,
-            b: pos.2,
-        }
+    fn from(color: (u8, u8, u8)) -> Self {
+        Color::new(color.0, color.1, color.2)
     }
 }

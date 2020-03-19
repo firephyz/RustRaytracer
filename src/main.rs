@@ -53,7 +53,7 @@ fn main() {
         texture_size.0,
         texture_size.1).unwrap();
 
-    let scene = scene::Scene::new(
+    let mut scene = scene::Scene::new(
         Camera::new(
             (0.0, 0.0, 0.0),
             (0.0, 0.0, 0.0),

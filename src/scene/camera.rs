@@ -39,7 +39,6 @@ impl Camera {
         // convert from pixel scale to real scale
         let x = (x as f64) / (self.width as f64) * self.rwidth;
         let y = (y as f64) / (self.height as f64) * self.rheight;
-        let dist_origin = (x*x + y*y).sqrt();
 
         // account for camera rotations
         let point = Point::from((self.rdepth, x, y)).normalize();

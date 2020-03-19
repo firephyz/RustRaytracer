@@ -24,7 +24,7 @@ impl Intersect for Sphere {
         let dist_vec = point_min_dist.add(&self.position.mult(-1.0));
         let distance = dist_vec.abs();
 
-        if distance <= self.radius {
+        if distance <= self.radius && (t > 0.0) {
             let t = t - (self.radius.powi(2) - distance.powi(2)).sqrt();
             let intersection = ray.pos().add(&ray.dir().mult(t));
             let normal_dir = intersection.add(&self.position.mult(-1.0)).normalize();

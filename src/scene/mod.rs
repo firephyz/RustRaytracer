@@ -22,14 +22,14 @@ pub use light_source::LightSource;
 
 pub struct Scene {
     pub lights: Vec<LightSource>,
-    pub objects: Vec<Box<Intersect>>,
+    pub objects: Vec<Box<dyn Intersect>>,
     camera: Camera,
 }
 
 impl Scene {
     pub fn new(camera: Camera) -> Scene {
         let mut lights = Vec::<LightSource>::new();
-        let mut objects = Vec::<Box<Intersect>>::new();
+        let mut objects = Vec::<Box<dyn Intersect>>::new();
 
         lights.push(LightSource::new(Point::from((12.5, 5.0, 5.0))));
 
