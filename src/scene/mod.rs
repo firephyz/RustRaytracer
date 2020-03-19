@@ -31,14 +31,14 @@ impl Scene {
         let mut lights = Vec::<LightSource>::new();
         let mut objects = Vec::<Box<dyn Intersect>>::new();
 
-        lights.push(LightSource::new(Point::from((12.5, 5.0, 5.0))));
+        lights.push(LightSource::new(Point::from((10.0, -5.0, 3.5))));
 
         objects.push(Box::new(Sphere::new(
-            Point::from((10.0, 0.0, 0.0)),
-            0.5)));
-        objects.push(Box::new(Sphere::new(
-            Point::from((15.0, 2.0, -3.0)),
+            Point::from((10.0, 0.0, -1.0)),
             1.0)));
+        objects.push(Box::new(Sphere::new(
+            Point::from((9.5, 0.0, 1.0)),
+            0.25)));
 
         Scene {
             lights: lights,

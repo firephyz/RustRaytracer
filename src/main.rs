@@ -55,14 +55,14 @@ fn main() {
 
     let mut scene = scene::Scene::new(
         Camera::new(
-            (0.0, 0.0, 0.0),
-            (0.0, 0.0, 0.0),
+            (0.5, 0.0, 0.5),
+            (0.0, -0.5, 0.0),
             texture_size.0,
             texture_size.1,
             70.0));
 
     let mut is_running = true;
-    let mut framerate_regulator = framerate::FramerateRegulator::new(20);
+    let mut framerate_regulator = framerate::FramerateRegulator::new(30);
     while is_running {
         context.canvas.with_texture_canvas(&mut texture_a, |t_canvas| {
             scene.render(t_canvas);
@@ -70,6 +70,8 @@ fn main() {
 
         context.canvas.copy(&texture_a, None, None).unwrap();
         context.canvas.present();
+
+        scene.lights[0].position.y += 0.1;
 
         poll_events(&mut context.events, &mut is_running);
 

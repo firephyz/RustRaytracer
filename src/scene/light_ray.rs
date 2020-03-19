@@ -81,7 +81,7 @@ impl LightRay {
 
             if intersections.len() == 0 {
                 let cos_theta = normal.direction.dot(&ray.ray.direction) / ray.ray.direction.abs();
-                cos_theta.powi(2)
+                cos_theta
             }
             else {
                 0.0
