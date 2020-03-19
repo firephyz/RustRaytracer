@@ -31,6 +31,14 @@ impl Color {
         self.g = new_g.floor() as u8;
         self.b = new_b.floor() as u8;
     }
+
+    pub fn scale(&self, scalar: f64) -> Color {
+        Color {
+            r: ((self.r as f64) * scalar).floor() as u8,
+            g: ((self.g as f64) * scalar).floor() as u8,
+            b: ((self.b as f64) * scalar).floor() as u8,
+        }
+    }
 }
 
 impl From<(u8, u8, u8)> for Color {

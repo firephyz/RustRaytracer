@@ -3,6 +3,7 @@ mod primitives;
 pub mod camera;
 //mod render_mesh;
 pub mod light_ray;
+mod light_source;
 
 use std::convert::From;
 
@@ -17,15 +18,21 @@ use object::{Intersect, Sphere};
 use primitives::{Point, Color};
 //use render_mesh::{RenderMesh, RenderSquare};
 use light_ray::LightRay;
+pub use light_source::LightSource;
 
 pub struct Scene {
-    objects: Vec<Box<Intersect>>,
+    pub lights: Vec<LightSource>,
+    pub objects: Vec<Box<Intersect>>,
     camera: Camera,
 }
 
 impl Scene {
     pub fn new(camera: Camera) -> Scene {
+        let mut lights = Vec::<LightSource>::new();
         let mut objects = Vec::<Box<Intersect>>::new();
+
+        lights.push(LightSource::new(Point::from((12.5, 5.0, 5.0))));
+
         objects.push(Box::new(Sphere::new(
             Point::from((10.0, 0.0, 0.0)),
             0.5)));
@@ -34,6 +41,7 @@ impl Scene {
             1.0)));
 
         Scene {
+            lights: lights,
             objects: objects,
             camera: camera,
         }
@@ -46,7 +54,7 @@ impl Scene {
 
         let pixel_colors = self.camera.pixels_iter().map(|(x, y)| {
             let mut ray = LightRay::from(self.camera.get_ray(x, y));
-            let color = ray.trace(&self.objects);
+            let color = ray.trace(&self);
             color
         }).collect::<Vec<Color>>();
 

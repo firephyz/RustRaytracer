@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
+use crate::scene::{Scene, LightSource};
 use crate::scene::object::Intersect;
 use super::primitives::{Ray, Point, Color};
 
@@ -10,12 +11,19 @@ pub struct LightRay {
 }
 
 impl LightRay {
-    pub fn new(ray: Ray, color: Color) -> LightRay {
+    pub fn new(ray: Ray) -> LightRay {
         LightRay {
             ray: ray,
-            color: color,
+            color: Color::from((0, 0, 0)),
         }
     }
+
+    // pub fn new(ray: Ray, color: Color) -> LightRay {
+    //     LightRay {
+    //         ray: ray,
+    //         color: color,
+    //     }
+    // }
 
     pub fn pos(&self) -> &Point {
         &self.ray.position
@@ -25,12 +33,11 @@ impl LightRay {
         &self.ray.direction
     }
 
-    pub fn trace(&mut self, objects: &Vec<Box<Intersect>>) -> Color {
+    pub fn trace(&mut self, scene: &Scene) -> Color {
         const NUM_RAYS: u32 = 1; // number of reflections
 
         for ray_index in 0..NUM_RAYS {
-            let intersection = self.find_closest_intersection(&objects);
-            //println!("{:?}", &intersection);
+            let intersection = self.find_closest_intersection(&scene.objects);
 
             match intersection {
                 None => {
@@ -39,13 +46,52 @@ impl LightRay {
                 },
                 Some((normal, color)) => {
                     // modify starting point of ray to compute reflection
-                    self.ray = Ray::new(normal.position.clone(), self.reflect(&normal));
+                    let bounce_ray = Ray::new(normal.position.clone(), self.reflect(&normal));
+                    let shadow_scalar = self.compute_shadows(&normal, &scene.lights, &scene.objects);
+                    let color = color.scale(shadow_scalar);
+
+                    self.ray = bounce_ray;
                     self.color.mix(&color);
                 },
             }
         }
 
         self.color.clone()
+    }
+
+    // computes ratio 1.0 to 0.0 of intensity of light
+    // TODO does intersections interior type get optimized away since
+    //   we only care about the count?
+    fn compute_shadows(&self,
+        normal: &Ray,
+        lights: &Vec<LightSource>,
+        objects: &Vec<Box<Intersect>>) -> f64 {
+
+        // compute intensities from each light source
+        let intensities = lights.iter().map(|light| {
+            // compute ray to light source
+            let ray_dir = light.position.add(&normal.position.mult(-1.0));
+            let ray = LightRay::new(Ray::new(normal.position.clone(), ray_dir));
+
+            // count number of intersections
+            let intersections : Vec<_> = objects.iter().filter_map(|obj| {
+                obj.intersect(&ray)
+            }).collect();
+
+            if intersections.len() == 0 {
+                let cos_theta = normal.direction.dot(&ray.ray.direction) / ray.ray.direction.abs();
+                cos_theta.powi(2)
+            }
+            else {
+                0.0
+            }
+        }).collect::<Vec<f64>>();
+
+        println!("{:#?}", &intensities);
+
+        intensities.iter().fold(0.0, |value, &intensity| {
+            value + (intensity / intensities.len() as f64)
+        })
     }
 
     // Returns normal to intersection and color picked up
@@ -88,7 +134,7 @@ impl LightRay {
 
 impl From<Ray> for LightRay {
     fn from(ray: Ray) -> Self {
-        LightRay::new(ray, Color::new())
+        LightRay::new(ray)
     }
 }
 

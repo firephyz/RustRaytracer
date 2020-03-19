@@ -62,7 +62,7 @@ fn main() {
             70.0));
 
     let mut is_running = true;
-    let mut framerate_regulator = framerate::FramerateRegulator::new(10);
+    let mut framerate_regulator = framerate::FramerateRegulator::new(20);
     while is_running {
         context.canvas.with_texture_canvas(&mut texture_a, |t_canvas| {
             scene.render(t_canvas);
