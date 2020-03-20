@@ -49,9 +49,6 @@ impl Scene {
 
     // TODO don't copy around the x and y's
     pub fn render<'b>(&self, canvas: &mut Canvas<Window>) {
-        canvas.set_draw_color(SdlColor::RGB(0, 0, 0));
-        canvas.clear();
-
         let pixel_colors = self.camera.pixels_iter().map(|(x, y)| {
             let mut ray = LightRay::from(self.camera.get_ray(x, y));
             let color = ray.trace(&self);

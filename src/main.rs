@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+use std::fs::File;
+
 #[allow(unused_imports)]
 use std::fmt;
 #[allow(unused_imports)]
@@ -45,30 +47,19 @@ fn main() {
     context.events.enable_event(EventType::Quit);
     context.events.enable_event(EventType::Window);
 
-    // Render to texture for accelerated rendering
-    let texture_creator = context.canvas.texture_creator();
-    let texture_size = context.canvas.output_size().unwrap();
-    let mut texture_a = texture_creator.create_texture_target(
-        PixelFormatEnum::RGB888,
-        texture_size.0,
-        texture_size.1).unwrap();
-
+    let canvas_size = context.canvas.output_size().unwrap();
     let mut scene = scene::Scene::new(
         Camera::new(
             (0.5, 0.0, 0.5),
             (0.0, -0.5, 0.0),
-            texture_size.0,
-            texture_size.1,
+            canvas_size.0,
+            canvas_size.1,
             70.0));
 
     let mut is_running = true;
     let mut framerate_regulator = framerate::FramerateRegulator::new(30);
     while is_running {
-        context.canvas.with_texture_canvas(&mut texture_a, |t_canvas| {
-            scene.render(t_canvas);
-        }).unwrap();
-
-        context.canvas.copy(&texture_a, None, None).unwrap();
+        scene.render(&mut context.canvas);
         context.canvas.present();
 
         scene.lights[0].position.y += 0.1;
@@ -84,7 +75,7 @@ fn init_app() -> Result<AppContext, AppInitErr> {
     let video_subsystem = sdl_context.video()?;
     let event_pump = sdl_context.event_pump()?;
 
-    let window = video_subsystem.window("raytracer", 400, 300)
+    let window = video_subsystem.window("raytracer", 300, 300)
     .position_centered()
     .build()?;
 

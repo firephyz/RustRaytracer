@@ -1,3 +1,5 @@
+use flame;
+
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
@@ -18,13 +20,6 @@ impl LightRay {
         }
     }
 
-    // pub fn new(ray: Ray, color: Color) -> LightRay {
-    //     LightRay {
-    //         ray: ray,
-    //         color: color,
-    //     }
-    // }
-
     pub fn pos(&self) -> &Point {
         &self.ray.position
     }
@@ -33,11 +28,14 @@ impl LightRay {
         &self.ray.direction
     }
 
+    // Trace this camera ray through the scene and compute color at that point
     pub fn trace(&mut self, scene: &Scene) -> Color {
         const NUM_RAYS: u32 = 1; // number of reflections
 
         for _ray_index in 0..NUM_RAYS {
+            //flame::start("find intersection");
             let intersection = self.find_closest_intersection(&scene.objects);
+            //flame::end("find intersection");
 
             match intersection {
                 None => {
@@ -47,7 +45,9 @@ impl LightRay {
                 Some((normal, color)) => {
                     // modify starting point of ray to compute reflection
                     let bounce_ray = Ray::new(normal.position.clone(), self.reflect(&normal));
+                    //flame::start("compute shadows");
                     let shadow_scalar = self.compute_shadows(&normal, &scene.lights, &scene.objects);
+                    //flame::end("compute shadows");
                     let color = color.scale(shadow_scalar);
 
                     self.ray = bounce_ray;
