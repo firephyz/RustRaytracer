@@ -59,6 +59,11 @@ impl Camera {
         let direction = self.transform(x, y);
         Ray::new(self.position.clone(), direction)
     }
+
+    pub fn move_rotate(&mut self, xrel: i32, yrel: i32) {
+        self.rotations.0 += 0.01 * xrel as f64;
+        self.rotations.1 -= 0.01 * yrel as f64;
+    }
 }
 
 pub struct CameraPixelIterator<'a> {

@@ -4,13 +4,15 @@ use crate::scene::LightRay;
 
 pub struct Sphere {
     position: Point,
+    color: Color,
     radius: f64,
 }
 
 impl Sphere {
-    pub fn new(pos: Point, radius: f64) -> Sphere {
+    pub fn new(pos: Point, color: Color, radius: f64) -> Sphere {
         Sphere {
             position: pos,
+            color: color,
             radius: radius,
         }
     }
@@ -30,7 +32,7 @@ impl Intersect for Sphere {
             let normal_dir = intersection.add(&self.position.mult(-1.0)).normalize();
             let normal = Ray::new(intersection, normal_dir);
 
-            Some((normal, t, Color::from((255, 255, 255))))
+            Some((normal, t, self.color.clone()))
         }
         else {
             None

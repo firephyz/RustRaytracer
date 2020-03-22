@@ -18,6 +18,7 @@ mod err_enum;
 mod framerate;
 mod scene;
 
+use scene::Scene;
 use scene::camera::Camera;
 
 // Create an enum wrapper over possible init err types
@@ -28,52 +29,32 @@ ErrorEnum!(
      WindowBuildError)
 );
 
+struct MouseState {
+    left_button_down: bool,
+}
+
+impl MouseState {
+    fn new() -> Self {
+        MouseState {
+            left_button_down: false,
+        }
+    }
+}
+
 struct AppContext {
     sdl_context: Sdl,
     video: VideoSubsystem,
     canvas: Canvas<Window>,
     events: EventPump,
-}
-
-fn main() {
-    let mut context = match init_app() {
-        Ok(c) => c,
-        Err(e) => {
-            let estring = format!("SDL2 init error: {}", e);
-            panic!(estring);
-        }
-    };
-
-    context.events.enable_event(EventType::Quit);
-    context.events.enable_event(EventType::Window);
-
-    let canvas_size = context.canvas.output_size().unwrap();
-    let mut scene = scene::Scene::new(
-        Camera::new(
-            (0.5, 0.0, 0.5),
-            (0.0, -0.5, 0.0),
-            canvas_size.0,
-            canvas_size.1,
-            70.0));
-
-    let mut is_running = true;
-    let mut framerate_regulator = framerate::FramerateRegulator::new(30);
-    while is_running {
-        scene.render(&mut context.canvas);
-        context.canvas.present();
-
-        scene.lights[0].position.y += 0.1;
-
-        poll_events(&mut context.events, &mut is_running);
-
-        framerate_regulator.delay();
-    }
+    is_running: bool,
+    scene: Scene,
+    mouse_state: MouseState,
 }
 
 fn init_app() -> Result<AppContext, AppInitErr> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
-    let event_pump = sdl_context.event_pump()?;
+    let mut event_pump = sdl_context.event_pump()?;
 
     let window = video_subsystem.window("raytracer", 300, 300)
     .position_centered()
@@ -88,16 +69,61 @@ fn init_app() -> Result<AppContext, AppInitErr> {
         std::process::exit(1);
     }
 
+    event_pump.enable_event(EventType::Quit);
+    event_pump.enable_event(EventType::Window);
+
+    let canvas_size = canvas.output_size().unwrap();
+    let scene = scene::Scene::new(
+        Camera::new(
+            (0.5, 0.0, 0.5),
+            (0.0, -0.5, 0.0),
+            canvas_size.0,
+            canvas_size.1,
+            70.0));
+
     Ok(AppContext {
         sdl_context: sdl_context,
         video: video_subsystem,
         canvas: canvas,
         events: event_pump,
+        is_running: true,
+        scene: scene,
+        mouse_state: MouseState::new(),
     })
 }
 
-fn poll_events(events: &mut EventPump, is_running: &mut bool) {
-    for event in events.poll_iter() {
+fn main() {
+    let mut context = match init_app() {
+        Ok(c) => c,
+        Err(e) => {
+            let estring = format!("SDL2 init error: {}", e);
+            panic!(estring);
+        }
+    };
+
+    let mut light_delta = 0.1;
+    let mut framerate_regulator = framerate::FramerateRegulator::new(30);
+    while context.is_running {
+        context.scene.render(&mut context.canvas);
+        context.canvas.present();
+
+        if context.scene.lights[0].position.y > 3.0 {
+            light_delta = -0.1;
+        }
+        else if context.scene.lights[0].position.y < -3.0 {
+            light_delta = 0.1;
+        }
+        context.scene.lights[0].position.y += light_delta;
+
+        poll_events(&mut context);
+
+        framerate_regulator.delay();
+    }
+}
+
+fn poll_events(context: &mut AppContext) {
+
+    for event in context.events.poll_iter() {
         match event {
             Event::Quit{timestamp} => {
                 eprintln!("SIGINT received at timestamp: {}", timestamp);
@@ -111,7 +137,7 @@ fn poll_events(events: &mut EventPump, is_running: &mut bool) {
             } => {
                 match win_event {
                     WindowEvent::Close => {
-                        *is_running = false;
+                        context.is_running = false;
                         break;
                     },
                     _ => {
@@ -119,6 +145,27 @@ fn poll_events(events: &mut EventPump, is_running: &mut bool) {
                     }
                 }
             }
+            Event::MouseButtonDown {
+                timestamp, window_id, which,
+                mouse_btn, clicks, x, y,
+            } => {
+                context.mouse_state.left_button_down = true;
+            },
+            Event::MouseButtonUp {
+                timestamp, window_id, which,
+                mouse_btn, clicks, x, y,
+            } => {
+                context.mouse_state.left_button_down = false;
+            },
+            Event::MouseMotion {
+                timestamp, window_id, which,
+                mousestate, x, y, xrel, yrel
+            } => {
+                if context.mouse_state.left_button_down {
+                    println!("{}, {}", xrel, yrel);
+                    context.scene.camera.move_rotate(xrel, yrel);
+                }
+            },
             _ => {
                 //println!("{:#?}", event);
             },

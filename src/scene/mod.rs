@@ -1,9 +1,9 @@
 mod object;
 mod primitives;
-pub mod camera;
 //mod render_mesh;
 pub mod light_ray;
 mod light_source;
+pub mod camera;
 
 use std::convert::From;
 
@@ -23,7 +23,7 @@ pub use light_source::LightSource;
 pub struct Scene {
     pub lights: Vec<LightSource>,
     pub objects: Vec<Box<dyn Intersect>>,
-    camera: Camera,
+    pub camera: Camera,
 }
 
 impl Scene {
@@ -35,9 +35,11 @@ impl Scene {
 
         objects.push(Box::new(Sphere::new(
             Point::from((10.0, 0.0, -1.0)),
+            Color::from((255, 255, 100)),
             1.0)));
         objects.push(Box::new(Sphere::new(
             Point::from((9.5, 0.0, 1.0)),
+            Color::from((100, 100, 255)),
             0.25)));
 
         Scene {
