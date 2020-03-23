@@ -2,6 +2,7 @@ use std::f64::consts::PI;
 
 use crate::scene::primitives::{Point, Ray, Rotation};
 
+#[derive(Debug)]
 pub struct Camera {
     pub position: Point,
     pub rotations: (f64, f64, f64),
@@ -59,9 +60,9 @@ impl Camera {
     }
 
     pub fn move_rotate(&mut self, yaw: i32, pitch: i32, roll: i32) {
-        self.rotations.0 += 0.01 * yaw as f64;
-        self.rotations.1 += 0.01 * pitch as f64;
-        self.rotations.2 += 0.01 * roll as f64;
+        self.rotations.0 += 0.005 * yaw as f64;
+        self.rotations.1 += 0.005 * pitch as f64;
+        self.rotations.2 += 0.005 * roll as f64;
     }
 
     pub fn move_translate(&self) {

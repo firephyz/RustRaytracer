@@ -1,3 +1,5 @@
+#![feature(get_mut_unchecked)]
+
 extern crate sdl2;
 
 use std::fs::File;
@@ -20,7 +22,7 @@ mod input;
 mod camera;
 
 use scene::Scene;
-use input::InputState;
+use input::{InputState, InputEventArgs};
 use camera::Camera;
 
 // Create an enum wrapper over possible init err types
@@ -116,6 +118,7 @@ fn main() {
 
 fn update_context(context: &mut AppContext) {
     let events = &mut context.input.events;
+    println!("{}", events.len());
     while !events.is_empty() {
         let (event_handler, args) = events.pop().unwrap();
         event_handler(&mut context.input.state, args);
@@ -152,7 +155,7 @@ fn poll_events(context: &mut AppContext) {
             } => {
                 context.input.events.push((
                     input::callbacks::enable_rotation,
-                    None));
+                    InputEventArgs::None));
             },
             Event::MouseButtonUp {
                 timestamp, window_id, which,
@@ -160,7 +163,7 @@ fn poll_events(context: &mut AppContext) {
             } => {
                 context.input.events.push((
                     input::callbacks::disable_rotation,
-                    None));
+                    InputEventArgs::None));
             },
             Event::MouseMotion {
                 timestamp, window_id, which,
@@ -168,10 +171,10 @@ fn poll_events(context: &mut AppContext) {
             } => {
                 context.input.events.push((
                     input::callbacks::rotate,
-                    Some(Box::new(input::CameraRotationEvent {
+                    InputEventArgs::CameraRotation {
                         yaw: xrel,
                         pitch: -yrel,
-                        roll:0 as i32})),
+                        roll:0 as i32},
                 ));
             },
             Event::KeyDown {
