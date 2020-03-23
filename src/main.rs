@@ -2,10 +2,9 @@ extern crate sdl2;
 
 use std::fs::File;
 
-#[allow(unused_imports)]
 use std::fmt;
-#[allow(unused_imports)]
 use std::convert::From;
+use std::rc::Rc;
 
 use sdl2::{Sdl, VideoSubsystem, EventPump, IntegerOrSdlError};
 use sdl2::event::{Event, EventType, WindowEvent};
@@ -17,9 +16,12 @@ use sdl2::video::{Window, WindowBuildError};
 mod err_enum;
 mod framerate;
 mod scene;
+mod input;
+mod camera;
 
 use scene::Scene;
-use scene::camera::Camera;
+use input::InputState;
+use camera::Camera;
 
 // Create an enum wrapper over possible init err types
 ErrorEnum!(
@@ -29,26 +31,14 @@ ErrorEnum!(
      WindowBuildError)
 );
 
-struct MouseState {
-    left_button_down: bool,
-}
-
-impl MouseState {
-    fn new() -> Self {
-        MouseState {
-            left_button_down: false,
-        }
-    }
-}
-
-struct AppContext {
+pub struct AppContext {
     sdl_context: Sdl,
     video: VideoSubsystem,
     canvas: Canvas<Window>,
     events: EventPump,
     is_running: bool,
     scene: Scene,
-    mouse_state: MouseState,
+    input: InputState,
 }
 
 fn init_app() -> Result<AppContext, AppInitErr> {
@@ -73,13 +63,15 @@ fn init_app() -> Result<AppContext, AppInitErr> {
     event_pump.enable_event(EventType::Window);
 
     let canvas_size = canvas.output_size().unwrap();
-    let scene = scene::Scene::new(
-        Camera::new(
-            (0.5, 0.0, 0.5),
-            (0.0, -0.5, 0.0),
-            canvas_size.0,
-            canvas_size.1,
-            70.0));
+    let camera = Camera::new(
+        (0.5, 0.0, 0.5),
+        (0.0, -0.5, 0.0),
+        canvas_size.0,
+        canvas_size.1,
+        70.0);
+
+    let input = InputState::new(camera);
+    let scene = scene::Scene::new(Rc::downgrade(&input.state.camera));
 
     Ok(AppContext {
         sdl_context: sdl_context,
@@ -88,7 +80,7 @@ fn init_app() -> Result<AppContext, AppInitErr> {
         events: event_pump,
         is_running: true,
         scene: scene,
-        mouse_state: MouseState::new(),
+        input: input,
     })
 }
 
@@ -116,8 +108,17 @@ fn main() {
         context.scene.lights[0].position.y += light_delta;
 
         poll_events(&mut context);
+        update_context(&mut context);
 
         framerate_regulator.delay();
+    }
+}
+
+fn update_context(context: &mut AppContext) {
+    let events = &mut context.input.events;
+    while !events.is_empty() {
+        let (event_handler, args) = events.pop().unwrap();
+        event_handler(&mut context.input.state, args);
     }
 }
 
@@ -149,22 +150,43 @@ fn poll_events(context: &mut AppContext) {
                 timestamp, window_id, which,
                 mouse_btn, clicks, x, y,
             } => {
-                context.mouse_state.left_button_down = true;
+                context.input.events.push((
+                    input::callbacks::enable_rotation,
+                    None));
             },
             Event::MouseButtonUp {
                 timestamp, window_id, which,
                 mouse_btn, clicks, x, y,
             } => {
-                context.mouse_state.left_button_down = false;
+                context.input.events.push((
+                    input::callbacks::disable_rotation,
+                    None));
             },
             Event::MouseMotion {
                 timestamp, window_id, which,
                 mousestate, x, y, xrel, yrel
             } => {
-                if context.mouse_state.left_button_down {
-                    println!("{}, {}", xrel, yrel);
-                    context.scene.camera.move_rotate(xrel, yrel);
-                }
+                context.input.events.push((
+                    input::callbacks::rotate,
+                    Some(Box::new(input::CameraRotationEvent {
+                        yaw: xrel,
+                        pitch: -yrel,
+                        roll:0 as i32})),
+                ));
+            },
+            Event::KeyDown {
+                timestamp, window_id,
+                keycode, scancode, keymod, repeat
+            } => {
+                // context.input_state.events.push((
+                //     ::enable_key,
+                //     Some(Box::new((keycode)))));
+            },
+            Event::KeyUp {
+                timestamp, window_id,
+                keycode, scancode, keymod, repeat
+            } => {
+                // context.input_state.release_keyboard(keycode);
             },
             _ => {
                 //println!("{:#?}", event);
