@@ -51,12 +51,6 @@ impl Scene {
 
     // TODO don't copy around the x and y's
     pub fn render(&self, canvas: &mut Canvas<Window>) {
-        // let test = Cell::new(Camera::new(
-        //     (0.0, 0.0, 0.0),
-        //     (0.0, 0.0, 0.0),
-        //     0, 0, 70.0
-        // ));
-        // println!("{:?}", &test);
         let camera = (*self.camera).borrow();
         let pixel_colors = camera.pixels_iter().map(|(x, y)| {
             let mut ray = LightRay::from(camera.get_ray(x, y));

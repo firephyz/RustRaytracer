@@ -29,7 +29,8 @@ impl Camera {
         }
     }
 
-    // transform an offset in pixel space (origin upper left), to a vector in 3d space
+    // transform an offset in pixel space (origin upper left),
+    // to a direction vector in 3d space
     pub fn transform(&self, x: u32, y: u32) -> Point {
         // move origin to center of camera
         let x =  (x as i32) - (self.width / 2) as i32;
@@ -45,8 +46,6 @@ impl Camera {
         let point = point.rotate(self.rotations.1, Rotation::Z);
         let point = point.rotate(self.rotations.0, Rotation::XY);
 
-        // add camera position offset
-        //let point = point.add(&self.position);
         point
     }
 
@@ -77,15 +76,13 @@ impl Camera {
         let left_axis = left_axis.rotate(self.rotations.1, Rotation::Z);
         let left_axis = left_axis.rotate(self.rotations.0, Rotation::XY);
 
-        self.position.x += 0.01 * (fb as f64) * normal.x;
-        self.position.y += 0.01 * (fb as f64) * normal.y;
-        self.position.z += 0.01 * (fb as f64) * normal.z;
+        self.position.x += 0.05 * (fb as f64) * normal.x;
+        self.position.y += 0.05 * (fb as f64) * normal.y;
+        self.position.z += 0.05 * (fb as f64) * normal.z;
 
-        self.position.x += 0.01 * (lr as f64) * left_axis.x;
-        self.position.y += 0.01 * (lr as f64) * left_axis.y;
-        self.position.z += 0.01 * (lr as f64) * left_axis.z;
-
-        //println!("{:?}", self.position);
+        self.position.x += 0.05 * (lr as f64) * left_axis.x;
+        self.position.y += 0.05 * (lr as f64) * left_axis.y;
+        self.position.z += 0.05 * (lr as f64) * left_axis.z;
     }
 }
 
