@@ -5,7 +5,8 @@ mod light_ray;
 mod light_source;
 
 use std::convert::From;
-use std::rc::Weak;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 extern crate sdl2;
 use sdl2::render::{Canvas};
@@ -22,11 +23,11 @@ pub use light_source::LightSource;
 pub struct Scene {
     pub lights: Vec<LightSource>,
     pub objects: Vec<Box<dyn Intersect>>,
-    pub camera: Weak<Camera>,
+    pub camera: Rc<RefCell<Camera>>,
 }
 
 impl Scene {
-    pub fn new(camera: Weak<Camera>) -> Scene {
+    pub fn new(camera: Rc<RefCell<Camera>>) -> Scene {
         let mut lights = Vec::<LightSource>::new();
         let mut objects = Vec::<Box<dyn Intersect>>::new();
 
@@ -50,7 +51,13 @@ impl Scene {
 
     // TODO don't copy around the x and y's
     pub fn render(&self, canvas: &mut Canvas<Window>) {
-        let camera = self.camera.upgrade().unwrap();
+        // let test = Cell::new(Camera::new(
+        //     (0.0, 0.0, 0.0),
+        //     (0.0, 0.0, 0.0),
+        //     0, 0, 70.0
+        // ));
+        // println!("{:?}", &test);
+        let camera = (*self.camera).borrow();
         let pixel_colors = camera.pixels_iter().map(|(x, y)| {
             let mut ray = LightRay::from(camera.get_ray(x, y));
             let color = ray.trace(&self);

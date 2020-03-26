@@ -65,7 +65,7 @@ impl Camera {
         self.rotations.2 += 0.005 * roll as f64;
     }
 
-    pub fn move_translate(&self) {
+    pub fn move_translate(&self, fb: i32, lr: i32) {
         // compute normals
         // adjust position
     }

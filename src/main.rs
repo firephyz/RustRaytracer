@@ -6,13 +6,14 @@ use std::fs::File;
 
 use std::fmt;
 use std::convert::From;
-use std::rc::Rc;
+use std::boxed::Box;
 
 use sdl2::{Sdl, VideoSubsystem, EventPump, IntegerOrSdlError};
 use sdl2::event::{Event, EventType, WindowEvent};
 use sdl2::pixels::{PixelFormatEnum};
 use sdl2::render::{Canvas};
 use sdl2::video::{Window, WindowBuildError};
+use sdl2::keyboard::Keycode;
 
 #[macro_use]
 mod err_enum;
@@ -22,7 +23,7 @@ mod input;
 mod camera;
 
 use scene::Scene;
-use input::{InputState, InputEventArgs};
+use input::{InputState, InputEvent, KeyboardKey};
 use camera::Camera;
 
 // Create an enum wrapper over possible init err types
@@ -73,7 +74,7 @@ fn init_app() -> Result<AppContext, AppInitErr> {
         70.0);
 
     let input = InputState::new(camera);
-    let scene = scene::Scene::new(Rc::downgrade(&input.state.camera));
+    let scene = scene::Scene::new(input.get_camera());
 
     Ok(AppContext {
         sdl_context: sdl_context,
@@ -110,18 +111,9 @@ fn main() {
         context.scene.lights[0].position.y += light_delta;
 
         poll_events(&mut context);
-        update_context(&mut context);
+        context.input.update();
 
         framerate_regulator.delay();
-    }
-}
-
-fn update_context(context: &mut AppContext) {
-    let events = &mut context.input.events;
-    println!("{}", events.len());
-    while !events.is_empty() {
-        let (event_handler, args) = events.pop().unwrap();
-        event_handler(&mut context.input.state, args);
     }
 }
 
@@ -153,43 +145,64 @@ fn poll_events(context: &mut AppContext) {
                 timestamp, window_id, which,
                 mouse_btn, clicks, x, y,
             } => {
-                context.input.events.push((
-                    input::callbacks::enable_rotation,
-                    InputEventArgs::None));
+                context.input.toggle_drag_camera();
             },
             Event::MouseButtonUp {
                 timestamp, window_id, which,
                 mouse_btn, clicks, x, y,
             } => {
-                context.input.events.push((
-                    input::callbacks::disable_rotation,
-                    InputEventArgs::None));
+                context.input.toggle_drag_camera();
             },
             Event::MouseMotion {
                 timestamp, window_id, which,
                 mousestate, x, y, xrel, yrel
             } => {
-                context.input.events.push((
-                    input::callbacks::rotate,
-                    InputEventArgs::CameraRotation {
-                        yaw: xrel,
-                        pitch: -yrel,
-                        roll:0 as i32},
-                ));
+                context.input.events.push(InputEvent::MouseMotion {
+                    xrel: xrel,
+                    yrel: yrel,
+                });
             },
             Event::KeyDown {
                 timestamp, window_id,
                 keycode, scancode, keymod, repeat
             } => {
-                // context.input_state.events.push((
-                //     ::enable_key,
-                //     Some(Box::new((keycode)))));
+                if !repeat {
+                    match keycode.unwrap() {
+                        Keycode::Q =>
+                            context.input.events.push(InputEvent::KeyChange(KeyboardKey::Q)),
+                        Keycode::E =>
+                            context.input.events.push(InputEvent::KeyChange(KeyboardKey::E)),
+                        Keycode::W =>
+                            context.input.events.push(InputEvent::KeyChange(KeyboardKey::W)),
+                        Keycode::A =>
+                            context.input.events.push(InputEvent::KeyChange(KeyboardKey::A)),
+                        Keycode::S =>
+                            context.input.events.push(InputEvent::KeyChange(KeyboardKey::S)),
+                        Keycode::D =>
+                            context.input.events.push(InputEvent::KeyChange(KeyboardKey::D)),
+                        _ => (),
+                    }
+                }
             },
             Event::KeyUp {
                 timestamp, window_id,
                 keycode, scancode, keymod, repeat
             } => {
-                // context.input_state.release_keyboard(keycode);
+                match keycode.unwrap() {
+                    Keycode::Q =>
+                        context.input.events.push(InputEvent::KeyChange(KeyboardKey::Q)),
+                    Keycode::E =>
+                        context.input.events.push(InputEvent::KeyChange(KeyboardKey::E)),
+                    Keycode::W =>
+                        context.input.events.push(InputEvent::KeyChange(KeyboardKey::W)),
+                    Keycode::A =>
+                        context.input.events.push(InputEvent::KeyChange(KeyboardKey::A)),
+                    Keycode::S =>
+                        context.input.events.push(InputEvent::KeyChange(KeyboardKey::S)),
+                    Keycode::D =>
+                        context.input.events.push(InputEvent::KeyChange(KeyboardKey::D)),
+                    _ => (),
+                }
             },
             _ => {
                 //println!("{:#?}", event);

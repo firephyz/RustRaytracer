@@ -1,92 +1,114 @@
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use sdl2::keyboard::Keycode;
 
 use crate::camera::Camera;
 
-pub enum InputEventArgs {
-    None,
-    CameraRotation {
-        yaw: i32,
-        pitch: i32,
-        roll: i32,
-    },
-    CameraTranslation {
-        forback: i32,
-        leftright: i32,
-        updown: i32,
-    },
+#[derive(Debug)]
+pub enum KeyboardKey {
+    Q,
+    E,
+    W,
+    A,
+    S,
+    D,
 }
 
-// pub trait InputEventArgs {
-//     type RetType;
-//     fn unwrap(&self) -> Self::RetType;
-// }
-//
-// #[derive(Clone, Copy)]
-// pub struct CameraRotationEvent {
-//     yaw: i32,
-//     pitch: i32,
-//     roll: i32,
-// }
-//
-// impl InputEventArgs for &CameraRotationEvent {
-//     type RetType = CameraRotationEvent;
-//     fn unwrap(&self) -> Self::RetType { *self }
-// }
+#[derive(Debug)]
+pub enum InputEvent {
+    MouseMotion {
+        xrel: i32,
+        yrel: i32,
+    },
+    KeyChange(KeyboardKey),
+}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Rather than storing a single fn type, store a fn type that implements a call trait so
-// second argument isn't always required.
-pub struct InputState_t {
-    pub camera: Rc<Camera>,
-    pub enable_rotation: bool,
+struct KeyboardState {
+    q: bool,
+    e: bool,
+    w: bool,
+    a: bool,
+    s: bool,
+    d: bool,
+}
+
+impl KeyboardState {
+    fn new() -> Self {
+        KeyboardState {
+            q: false,
+            e: false,
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+        }
+    }
 }
 
 pub struct InputState {
-    pub events: Vec<(fn(&mut InputState_t, InputEventArgs), InputEventArgs)>,
-    pub state: InputState_t,
+    pub events: Vec<InputEvent>,
+    camera: Rc<RefCell<Camera>>,
+    drag_camera: bool,
+    keyboard: KeyboardState,
 }
 
 impl InputState {
     pub fn new(camera: Camera) -> Self {
         InputState {
             events: Vec::new(),
-            state: InputState_t {
-                camera: Rc::new(camera),
-                enable_rotation: false,
-            },
+            camera: Rc::new(RefCell::new(camera)),
+            drag_camera: false,
+            keyboard: KeyboardState::new(),
         }
     }
-}
 
-pub mod callbacks {
-    use std::rc::Rc;
-    use super::{InputState_t, InputEventArgs};
-
-    pub fn enable_rotation(input: &mut InputState_t, args: InputEventArgs) {
-        input.enable_rotation = true;
+    pub fn get_camera(&self) -> Rc<RefCell<Camera>> {
+        self.camera.clone()
     }
 
-    pub fn disable_rotation(input: &mut InputState_t, args: InputEventArgs) {
-        input.enable_rotation = false;
+    pub fn toggle_drag_camera(&mut self) {
+        self.drag_camera = !self.drag_camera;
     }
 
-    pub fn rotate(input: &mut InputState_t, args: InputEventArgs) {
-        if input.enable_rotation {
-            match args {
-                InputEventArgs::CameraRotation {
-                    yaw: yaw,
-                    pitch: pitch,
-                    roll: roll,
-                } => {
-                    unsafe {
-                        Rc::get_mut_unchecked(&mut input.camera).move_rotate(yaw, pitch, roll);
+    pub fn update(&mut self) {
+        for event in self.events.iter() {
+            match event {
+                InputEvent::MouseMotion {xrel, yrel} => {
+                    if self.drag_camera {
+                        (*self.camera).borrow_mut().move_rotate(*xrel, -*yrel, 0);
                     }
-                    //Rc::get_mut(&mut input.camera).unwrap().move_rotate(yaw, pitch, roll);
                 },
-                _ => std::unreachable!(),
+                InputEvent::KeyChange(key) => {
+                    match key {
+                        KeyboardKey::Q => self.keyboard.q = !self.keyboard.q,
+                        KeyboardKey::E => self.keyboard.e = !self.keyboard.e,
+                        KeyboardKey::W => self.keyboard.w = !self.keyboard.w,
+                        KeyboardKey::A => self.keyboard.a = !self.keyboard.a,
+                        KeyboardKey::S => self.keyboard.s = !self.keyboard.s,
+                        KeyboardKey::D => self.keyboard.d = !self.keyboard.d,
+                    }
+                },
             }
+        }
+        self.events.clear();
+
+        if self.keyboard.q ^ self.keyboard.e {
+            let value = {
+                if self.keyboard.q { -2 }
+                else { 2 }
+            };
+            self.camera.borrow_mut().move_rotate(0, 0, -value);
+        }
+
+        if self.keyboard.w ^ self.keyboard.s {
+            if self.keyboard.w { self.camera.borrow_mut().move_translate(5, 0); }
+            else { self.camera.borrow_mut().move_translate(-5, 0); }
+        }
+
+        if self.keyboard.a ^ self.keyboard.d {
+            if self.keyboard.a { self.camera.borrow_mut().move_translate(0, -5); }
+            else { self.camera.borrow_mut().move_translate(0, 5); }
         }
     }
 }
