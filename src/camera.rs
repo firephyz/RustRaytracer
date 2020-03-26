@@ -15,7 +15,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(position: (f64, f64, f64), rotations: (f64, f64, f64), width: u32, height: u32, fov: f64) -> Self {
-        let rdepth = 1.0;
+        let rdepth = 0.05;
         let rwidth = (PI*fov/360.0).tan() * rdepth;
         let rheight = ((height as f64) / (width as f64)) * rwidth;
         Camera {
@@ -46,7 +46,7 @@ impl Camera {
         let point = point.rotate(self.rotations.0, Rotation::XY);
 
         // add camera position offset
-        let point = point.add(&self.position);
+        //let point = point.add(&self.position);
         point
     }
 
@@ -60,14 +60,32 @@ impl Camera {
     }
 
     pub fn move_rotate(&mut self, yaw: i32, pitch: i32, roll: i32) {
-        self.rotations.0 += 0.005 * yaw as f64;
-        self.rotations.1 += 0.005 * pitch as f64;
-        self.rotations.2 += 0.005 * roll as f64;
+        let yaw = 0.005 * (yaw as f64);
+        let pitch = 0.005 * (pitch as f64);
+        self.rotations.0 += yaw * self.rotations.2.cos() - pitch * self.rotations.2.sin();
+        self.rotations.1 += yaw * self.rotations.2.sin() + pitch * self.rotations.2.cos();
+        self.rotations.2 += 0.005 * (roll as f64);
     }
 
-    pub fn move_translate(&self, fb: i32, lr: i32) {
-        // compute normals
-        // adjust position
+    pub fn move_translate(&mut self, fb: i32, lr: i32) {
+        let normal = Point::from((1.0, 0.0, 0.0));
+        let normal = normal.rotate(self.rotations.2, Rotation::Planar);
+        let normal = normal.rotate(self.rotations.1, Rotation::Z);
+        let normal = normal.rotate(self.rotations.0, Rotation::XY);
+        let left_axis = Point::from((0.0, 1.0, 0.0));
+        let left_axis = left_axis.rotate(self.rotations.2, Rotation::Planar);
+        let left_axis = left_axis.rotate(self.rotations.1, Rotation::Z);
+        let left_axis = left_axis.rotate(self.rotations.0, Rotation::XY);
+
+        self.position.x += 0.01 * (fb as f64) * normal.x;
+        self.position.y += 0.01 * (fb as f64) * normal.y;
+        self.position.z += 0.01 * (fb as f64) * normal.z;
+
+        self.position.x += 0.01 * (lr as f64) * left_axis.x;
+        self.position.y += 0.01 * (lr as f64) * left_axis.y;
+        self.position.z += 0.01 * (lr as f64) * left_axis.z;
+
+        //println!("{:?}", self.position);
     }
 }
 
@@ -90,12 +108,13 @@ impl<'a> Iterator for CameraPixelIterator<'a> {
 
     fn next(&mut self) -> Option<(u32, u32)> {
 
-        if self.index == (self.camera.width * self.camera.height - 1) {
+        if self.index == (self.camera.width * self.camera.height) {
             None
         }
         else {
+            let result = Some((self.index % self.camera.width, self.index / self.camera.width));
             self.index += 1;
-            Some((self.index % self.camera.width, self.index / self.camera.width))
+            result
         }
     }
 }

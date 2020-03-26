@@ -67,8 +67,8 @@ fn init_app() -> Result<AppContext, AppInitErr> {
 
     let canvas_size = canvas.output_size().unwrap();
     let camera = Camera::new(
-        (0.5, 0.0, 0.5),
-        (0.0, -0.5, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
         canvas_size.0,
         canvas_size.1,
         70.0);

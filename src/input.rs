@@ -95,20 +95,20 @@ impl InputState {
 
         if self.keyboard.q ^ self.keyboard.e {
             let value = {
-                if self.keyboard.q { -2 }
-                else { 2 }
+                if self.keyboard.q { -3 }
+                else { 3 }
             };
             self.camera.borrow_mut().move_rotate(0, 0, -value);
         }
 
         if self.keyboard.w ^ self.keyboard.s {
-            if self.keyboard.w { self.camera.borrow_mut().move_translate(5, 0); }
-            else { self.camera.borrow_mut().move_translate(-5, 0); }
+            if self.keyboard.w { self.camera.borrow_mut().move_translate(1, 0); }
+            else { self.camera.borrow_mut().move_translate(-1, 0); }
         }
 
         if self.keyboard.a ^ self.keyboard.d {
-            if self.keyboard.a { self.camera.borrow_mut().move_translate(0, -5); }
-            else { self.camera.borrow_mut().move_translate(0, 5); }
+            if self.keyboard.a { self.camera.borrow_mut().move_translate(0, -1); }
+            else { self.camera.borrow_mut().move_translate(0, 1); }
         }
     }
 }
